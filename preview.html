@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { background: #333; color: white; font-family: sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .controls { margin-bottom: 8px; display: flex; gap: 8px; justify-content: center; }
+        .view-area { flex: 1; display: flex; align-items: center; justify-content: center; overflow: auto; background: #1a1a1a; border-radius: 4px; }
+        img { display: block; image-rendering: pixelated; /* Keeps icons sharp when zoomed in */ }
+        .fit { max-width: 100%; max-height: 100%; object-fit: contain; }
+        button { background: #555; border: none; color: white; padding: 5px 12px; cursor: pointer; border-radius: 3px; font-size: 12px; }
+        button:hover { background: #666; }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button onclick="zoom('fit')">Zoom to Fit</button>
+        <button onclick="zoom('actual')">Actual Size (1:1)</button>
+    </div>
+    <div class="view-area">
+        <img id="mirror" class="fit" src="" />
+    </div>
+
+    <script>
+        const img = document.getElementById("mirror");
+        
+        function zoom(mode) {
+            img.className = (mode === 'fit') ? 'fit' : '';
+        }
+
+        // Request a PNG update from the main Photopea window
+        function getDocImage() {
+            window.parent.postMessage("app.activeDocument.saveToOE('png');", "*");
+        }
+
+        // Catch the image data Photopea sends back
+        window.addEventListener("message", (e) => {
+            if (e.data instanceof ArrayBuffer) {
+                const blob = new Blob([e.data], { type: "image/png" });
+                img.src = URL.createObjectURL(blob);
+            }
+        });
+
+        // Request an update every 500ms for a "live" feel
+        setInterval(getDocImage, 500);
+    </script>
+</body>
+</html>
